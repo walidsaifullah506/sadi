@@ -1,0 +1,270 @@
+/* PRELOADER STYLES */
+#preloader {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeOut 0.5s ease-in-out 2.5s forwards;
+}
+
+.glitch-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.glitch-logo {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  font-weight: bold;
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  border: 3px solid #00ff88;
+  border-radius: 10px;
+  animation: glitch 1.5s infinite, pulse 2s infinite;
+  text-shadow: 0 0 20px #00ff88;
+}
+
+.glitch-logo-img {
+  width: 120px;
+  height: 120px;
+  border: 3px solid #00ff88;
+  border-radius: 10px;
+  object-fit: contain;
+  background: rgba(0, 255, 136, 0.1);
+  padding: 10px;
+  animation: glitch 1.5s infinite, pulse 2s infinite;
+  box-shadow: 0 0 20px #00ff88;
+}
+
+.glitch-text {
+  font-size: 24px;
+  color: #00ff88;
+  letter-spacing: 3px;
+  animation: flicker 1s infinite;
+  text-shadow: 0 0 10px #00ff88;
+}
+
+@keyframes glitch {
+  0% {
+    transform: scale(1) rotate(0deg);
+    text-shadow: -2px 0 #ff0055, 2px 0 #00cc88;
+  }
+  50% {
+    transform: scale(1.1) rotate(2deg);
+    text-shadow: 3px 0 #ffaa00, -3px 0 #0088ff;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    text-shadow: -2px 0 #ff0055, 2px 0 #00cc88;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px #00ff88;
+  }
+  50% {
+    box-shadow: 0 0 40px #00ff88;
+  }
+}
+
+@keyframes flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* TYPING ANIMATION */
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* TERMINAL HERO ANIMATION */
+.terminal-hero {
+  background: rgba(0, 20, 40, 0.8);
+  border: 2px solid #00ff88;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  animation: slideInLeft 0.8s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* CURSOR BLINK */
+.cursor {
+  animation: blink 1s infinite;
+  color: #00ff88;
+}
+
+/* GLOW EFFECT */
+.glow {
+  text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+}
+
+/* CARD HOVER EFFECTS */
+.skill-card,
+.project-card,
+.cert-card,
+.tip-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* NEON GLOW ANIMATION */
+@keyframes neonGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+  }
+  50% {
+    box-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88;
+  }
+}
+
+/* SCAN LINE EFFECT */
+@keyframes scanLine {
+  0% {
+    top: -100%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+.scan-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-effect::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+  animation: scanLine 3s infinite;
+  z-index: 1;
+}
+
+/* BUTTON ANIMATIONS */
+.btn-cv,
+.btn-submit,
+.btn-small {
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.btn-cv:hover,
+.btn-submit:hover,
+.btn-small:hover {
+  text-shadow: 0 0 10px #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  transform: translateY(-2px);
+}
+
+/* IMAGE ANIMATIONS */
+@keyframes logoPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+}
+
+@keyframes profileFloat {
+  0% {
+    transform: translateY(0px);
+    filter: brightness(1);
+  }
+  25% {
+    transform: translateY(-12px);
+    filter: brightness(1.08);
+  }
+  50% {
+    transform: translateY(0px);
+    filter: brightness(1);
+  }
+  75% {
+    transform: translateY(-8px);
+    filter: brightness(1.04);
+  }
+  100% {
+    transform: translateY(0px);
+    filter: brightness(1);
+  }
+}
