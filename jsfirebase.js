@@ -32,19 +32,6 @@ function initializeFirebase() {
       console.log('To enable uploads, add Firebase credentials to jsfirebase.js');
       console.log('See: FIREBASE_SETUP_GUIDE.md for instructions.');
       
-      // Show info banner (not blocking)
-      if (document.body) {
-        const demoBanner = document.createElement('div');
-        demoBanner.id = 'demo-mode-banner';
-        demoBanner.innerHTML = `
-          <div style="position: fixed; top: 0; left: 0; right: 0; background: #1a1a1a; border-bottom: 2px solid #ffa500; padding: 12px 20px; z-index: 9999; font-family: monospace; display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #ffa500; font-size: 13px;">⚡ DEMO MODE (Local - No Firebase)</span>
-            <button onclick="this.parentElement.parentElement.style.display='none'" style="background: transparent; border: 1px solid #ffa500; color: #ffa500; padding: 4px 12px; cursor: pointer; border-radius: 3px; font-size: 12px;">Hide</button>
-          </div>
-        `;
-        document.body.insertBefore(demoBanner, document.body.firstChild);
-      }
-      
       return false;
     }
 
