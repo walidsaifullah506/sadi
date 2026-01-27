@@ -1,137 +1,284 @@
 // ============================================
-// EMAILJS INTEGRATION
+// FIREBASE CONFIGURATION & INITIALIZATION
 // ============================================
 
-// IMPORTANT: Replace these with your actual EmailJS credentials from emailjs.com
-const EMAILJS_SERVICE_ID = 'service_xyz'; // Replace with your service ID
-const EMAILJS_TEMPLATE_ID = 'template_xyz'; // Replace with your template ID
-const EMAILJS_PUBLIC_KEY = 'your_public_key'; // Replace with your public key
+// IMPORTANT: Replace with your Firebase config from Firebase Console
+// Get this from: https://console.firebase.google.com/
 
-// Initialize EmailJS
-function initEmailJS() {
-  if (typeof emailjs !== 'undefined') {
-    emailjs.init(EMAILJS_PUBLIC_KEY);
-    console.log('✓ EmailJS initialized');
-  } else {
-    console.warn('⚠ EmailJS not loaded');
-  }
-}
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-// Send email function
-async function sendEmail() {
-  const name = document.getElementById('contact-name').value.trim();
-  const email = document.getElementById('contact-email').value.trim();
-  const message = document.getElementById('contact-message').value.trim();
-  const submitBtn = document.getElementById('submit-btn');
-  const responseDiv = document.getElementById('response-message');
+// Initialize Firebase
+let app, db, auth, storage;
 
-  // Validation
-  if (!name || !email || !message) {
-    showMessage('❌ All fields are required!', 'error');
-    return;
-  }
+// Demo mode flag
+let DEMO_MODE = false;
 
-  if (!validateEmail(email)) {
-    showMessage('❌ Please enter a valid email address!', 'error');
-    return;
-  }
-
-  if (message.length < 10) {
-    showMessage('❌ Message must be at least 10 characters long!', 'error');
-    return;
-  }
-
-  // Disable button during sending
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'sending...';
-
+function initializeFirebase() {
   try {
-    // Check if EmailJS is properly configured
-    if (EMAILJS_PUBLIC_KEY === 'your_public_key') {
-      // Demo mode - just show success message
-      console.warn('⚠ Using demo mode - configure EmailJS credentials');
-      await simulateEmailSend(name, email, message);
-      showMessage('✓ Message received! (Demo mode) Admin will contact you soon.', 'success');
-    } else {
-      // Real EmailJS send
-      const response = await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        {
-          from_name: name,
-          from_email: email,
-          message: message,
-          to_email: 'your_email@gmail.com' // Replace with your admin email
-        }
-      );
-
-      if (response.status === 200) {
-        showMessage('✓ Message sent successfully! Admin will contact you soon.', 'success');
-        // Clear form
-        document.getElementById('contact-name').value = '';
-        document.getElementById('contact-email').value = '';
-        document.getElementById('contact-message').value = '';
-      }
+    if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+      // Enable demo/offline mode
+      DEMO_MODE = true;
+      console.warn('⚠️ DEMO MODE: Firebase not configured - running in offline mode');
+      console.log('%c📝 DEMO MODE ENABLED:', 'color: #ffa500; font-weight: bold; font-size: 14px;');
+      console.log('Running locally without Firebase.');
+      console.log('File uploads will NOT work.');
+      console.log('To enable uploads, add Firebase credentials to jsfirebase.js');
+      console.log('See: FIREBASE_SETUP_GUIDE.md for instructions.');
+      
+      return false;
     }
+
+    app = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    storage = firebase.storage();
+    DEMO_MODE = false;
+
+    console.log('✓ Firebase initialized successfully');
+    console.log('✓ Storage:', storage ? 'Ready' : 'Not available');
+    console.log('✓ Firestore:', db ? 'Ready' : 'Not available');
+    console.log('✓ Auth:', auth ? 'Ready' : 'Not available');
+    return true;
   } catch (error) {
-    console.error('Email send error:', error);
-    showMessage('❌ Failed to send message. Please try again later.', 'error');
-  } finally {
-    // Re-enable button
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'submit --secure';
+    console.error('Firebase initialization error:', error);
+    DEMO_MODE = true;
+    console.log('Falling back to demo mode...');
+    return false;
   }
 }
 
-// Simulate email send for demo (Firebase backup)
-async function simulateEmailSend(name, email, message) {
+// Authentication Functions
+
+// Sign up function
+async function signUp(email, password) {
   try {
-    if (typeof db !== 'undefined') {
-      // Save to Firebase if available
-      await db.collection('contact_messages').add({
-        name: name,
-        email: email,
-        message: message,
-        timestamp: new Date(),
-        ip_region: 'stored'
+    const result = await auth.createUserWithEmailAndPassword(email, password);
+    console.log('✓ User registered:', result.user.uid);
+    return result.user;
+  } catch (error) {
+    console.error('Sign up error:', error);
+    throw error;
+  }
+}
+
+// Login function
+async function loginUser(email, password) {
+  try {
+    const result = await auth.signInWithEmailAndPassword(email, password);
+    console.log('✓ User logged in:', result.user.uid);
+    localStorage.setItem('adminToken', result.user.uid);
+    return result.user;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+}
+
+// Logout function
+async function logoutUser() {
+  try {
+    await auth.signOut();
+    localStorage.removeItem('adminToken');
+    console.log('✓ User logged out');
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+}
+
+// Firestore Functions
+
+// Save contact message
+async function saveContactMessage(name, email, message) {
+  try {
+    // Demo mode - save to localStorage
+    if (DEMO_MODE) {
+      const messages = JSON.parse(localStorage.getItem('demo_messages') || '[]');
+      messages.push({
+        id: Date.now().toString(),
+        name, email, message,
+        timestamp: new Date().toISOString(),
+        status: 'unread'
       });
-      console.log('✓ Message saved to Firebase');
+      localStorage.setItem('demo_messages', JSON.stringify(messages));
+      console.log('✓ Message saved to demo storage:', messages.length, 'total');
+      return Date.now().toString();
     }
-  } catch (error) {
-    console.log('Local storage of message');
-    // Save to local storage as backup
-    const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]');
-    messages.push({
+
+    const docRef = await db.collection('contact_messages').add({
       name: name,
       email: email,
       message: message,
-      timestamp: new Date().toISOString()
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      status: 'unread'
     });
-    localStorage.setItem('contact_messages', JSON.stringify(messages));
+    console.log('✓ Message saved:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Save message error:', error);
+    throw error;
   }
 }
 
-// Show message helper
-function showMessage(message, type = 'success') {
-  const responseDiv = document.getElementById('response-message');
-  if (responseDiv) {
-    responseDiv.textContent = message;
-    responseDiv.className = `response-message show ${type}`;
-    setTimeout(() => {
-      responseDiv.classList.remove('show');
-    }, 4000);
+// Get all contact messages (admin only)
+async function getContactMessages() {
+  try {
+    // Demo mode - get from localStorage
+    if (DEMO_MODE) {
+      const messages = JSON.parse(localStorage.getItem('demo_messages') || '[]');
+      console.log('✓ Loaded', messages.length, 'messages from demo storage');
+      return messages;
+    }
+
+    const snapshot = await db.collection('contact_messages')
+      .orderBy('timestamp', 'desc')
+      .get();
+    
+    const messages = [];
+    snapshot.forEach(doc => {
+      messages.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    return messages;
+  } catch (error) {
+    console.error('Get messages error:', error);
+    return [];
   }
 }
 
-// Validate email
-function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
+// Save project
+async function saveProject(projectData) {
+  try {
+    const docRef = await db.collection('projects').add({
+      ...projectData,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log('✓ Project saved:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Save project error:', error);
+    throw error;
+  }
 }
 
-// Initialize on page load
+// Get all projects
+async function getProjects() {
+  try {
+    const snapshot = await db.collection('projects')
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const projects = [];
+    snapshot.forEach(doc => {
+      projects.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    return projects;
+  } catch (error) {
+    console.error('Get projects error:', error);
+    return [];
+  }
+}
+
+// Delete project
+async function deleteProject(projectId) {
+  try {
+    await db.collection('projects').doc(projectId).delete();
+    console.log('✓ Project deleted');
+  } catch (error) {
+    console.error('Delete project error:', error);
+    throw error;
+  }
+}
+
+// Save certificate
+async function saveCertificate(certData) {
+  try {
+    const docRef = await db.collection('certificates').add({
+      ...certData,
+      uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log('✓ Certificate saved:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Save certificate error:', error);
+    throw error;
+  }
+}
+
+// Get all certificates
+async function getCertificates() {
+  try {
+    const snapshot = await db.collection('certificates')
+      .orderBy('uploadedAt', 'desc')
+      .get();
+    
+    const certs = [];
+    snapshot.forEach(doc => {
+      certs.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    return certs;
+  } catch (error) {
+    console.error('Get certificates error:', error);
+    return [];
+  }
+}
+
+// Storage Functions
+
+// Upload file to Firebase Storage
+async function uploadFile(file, folder = 'documents') {
+  try {
+    // Demo mode - show friendly message
+    if (DEMO_MODE) {
+      alert('⚠️ Demo Mode: File uploads disabled\n\nTo enable uploads:\n1. Get Firebase credentials\n2. Update jsfirebase.js\n3. See: FIREBASE_SETUP_GUIDE.md');
+      throw new Error('Demo mode - Firebase not configured');
+    }
+
+    // Check if storage is initialized
+    if (!storage) {
+      throw new Error('❌ Firebase Storage not initialized. Please configure Firebase credentials in jsfirebase.js');
+    }
+
+    const storageRef = storage.ref(`${folder}/${Date.now()}_${file.name}`);
+    const snapshot = await storageRef.put(file);
+    const downloadURL = await snapshot.ref.getDownloadURL();
+    console.log('✓ File uploaded:', downloadURL);
+    return downloadURL;
+  } catch (error) {
+    console.error('Upload error:', error);
+    throw error;
+  }
+}
+
+// Delete file from Firebase Storage
+async function deleteFile(fileUrl) {
+  try {
+    const fileRef = storage.refFromURL(fileUrl);
+    await fileRef.delete();
+    console.log('✓ File deleted');
+  } catch (error) {
+    console.error('Delete file error:', error);
+    throw error;
+  }
+}
+
+// Initialize Firebase when page loads
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initEmailJS);
+  document.addEventListener('DOMContentLoaded', initializeFirebase);
 } else {
-  initEmailJS();
+  initializeFirebase();
 }
