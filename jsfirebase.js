@@ -18,19 +18,7 @@ const firebaseConfig = {
 let app, db, auth, storage;
 
 // Demo mode flag
-let DEMO_MODE = false;
 
-function initializeFirebase() {
-  try {
-    if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-      // Enable demo/offline mode
-      DEMO_MODE = true;
-      console.warn('⚠️ DEMO MODE: Firebase not configured - running in offline mode');
-      console.log('%c📝 DEMO MODE ENABLED:', 'color: #ffa500; font-weight: bold; font-size: 14px;');
-      console.log('Running locally without Firebase.');
-      console.log('File uploads will NOT work.');
-      console.log('To enable uploads, add Firebase credentials to jsfirebase.js');
-      console.log('See: FIREBASE_SETUP_GUIDE.md for instructions.');
       
       // Show info banner (not blocking)
       if (document.body) {
