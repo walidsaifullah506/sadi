@@ -17,11 +17,34 @@ const firebaseConfig = {
 // Initialize Firebase
 let app, db, auth, storage;
 
+// Demo mode flag
+let DEMO_MODE = false;
+
 function initializeFirebase() {
   try {
     if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-      console.warn('⚠ Firebase not configured. Using demo mode.');
-      console.log('Please update jsfirebase.js with your Firebase credentials.');
+      // Enable demo/offline mode
+      DEMO_MODE = true;
+      console.warn('⚠️ DEMO MODE: Firebase not configured - running in offline mode');
+      console.log('%c📝 DEMO MODE ENABLED:', 'color: #ffa500; font-weight: bold; font-size: 14px;');
+      console.log('Running locally without Firebase.');
+      console.log('File uploads will NOT work.');
+      console.log('To enable uploads, add Firebase credentials to jsfirebase.js');
+      console.log('See: FIREBASE_SETUP_GUIDE.md for instructions.');
+      
+      // Show info banner (not blocking)
+      if (document.body) {
+        const demoBanner = document.createElement('div');
+        demoBanner.id = 'demo-mode-banner';
+        demoBanner.innerHTML = `
+          <div style="position: fixed; top: 0; left: 0; right: 0; background: #1a1a1a; border-bottom: 2px solid #ffa500; padding: 12px 20px; z-index: 9999; font-family: monospace; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #ffa500; font-size: 13px;">⚡ DEMO MODE (Local - No Firebase)</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" style="background: transparent; border: 1px solid #ffa500; color: #ffa500; padding: 4px 12px; cursor: pointer; border-radius: 3px; font-size: 12px;">Hide</button>
+          </div>
+        `;
+        document.body.insertBefore(demoBanner, document.body.firstChild);
+      }
+      
       return false;
     }
 
@@ -29,11 +52,17 @@ function initializeFirebase() {
     db = firebase.firestore();
     auth = firebase.auth();
     storage = firebase.storage();
+    DEMO_MODE = false;
 
     console.log('✓ Firebase initialized successfully');
+    console.log('✓ Storage:', storage ? 'Ready' : 'Not available');
+    console.log('✓ Firestore:', db ? 'Ready' : 'Not available');
+    console.log('✓ Auth:', auth ? 'Ready' : 'Not available');
     return true;
   } catch (error) {
     console.error('Firebase initialization error:', error);
+    DEMO_MODE = true;
+    console.log('Falling back to demo mode...');
     return false;
   }
 }
@@ -81,6 +110,20 @@ async function logoutUser() {
 // Save contact message
 async function saveContactMessage(name, email, message) {
   try {
+    // Demo mode - save to localStorage
+    if (DEMO_MODE) {
+      const messages = JSON.parse(localStorage.getItem('demo_messages') || '[]');
+      messages.push({
+        id: Date.now().toString(),
+        name, email, message,
+        timestamp: new Date().toISOString(),
+        status: 'unread'
+      });
+      localStorage.setItem('demo_messages', JSON.stringify(messages));
+      console.log('✓ Message saved to demo storage:', messages.length, 'total');
+      return Date.now().toString();
+    }
+
     const docRef = await db.collection('contact_messages').add({
       name: name,
       email: email,
@@ -99,6 +142,13 @@ async function saveContactMessage(name, email, message) {
 // Get all contact messages (admin only)
 async function getContactMessages() {
   try {
+    // Demo mode - get from localStorage
+    if (DEMO_MODE) {
+      const messages = JSON.parse(localStorage.getItem('demo_messages') || '[]');
+      console.log('✓ Loaded', messages.length, 'messages from demo storage');
+      return messages;
+    }
+
     const snapshot = await db.collection('contact_messages')
       .orderBy('timestamp', 'desc')
       .get();
@@ -205,6 +255,17 @@ async function getCertificates() {
 // Upload file to Firebase Storage
 async function uploadFile(file, folder = 'documents') {
   try {
+    // Demo mode - show friendly message
+    if (DEMO_MODE) {
+      alert('⚠️ Demo Mode: File uploads disabled\n\nTo enable uploads:\n1. Get Firebase credentials\n2. Update jsfirebase.js\n3. See: FIREBASE_SETUP_GUIDE.md');
+      throw new Error('Demo mode - Firebase not configured');
+    }
+
+    // Check if storage is initialized
+    if (!storage) {
+      throw new Error('❌ Firebase Storage not initialized. Please configure Firebase credentials in jsfirebase.js');
+    }
+
     const storageRef = storage.ref(`${folder}/${Date.now()}_${file.name}`);
     const snapshot = await storageRef.put(file);
     const downloadURL = await snapshot.ref.getDownloadURL();

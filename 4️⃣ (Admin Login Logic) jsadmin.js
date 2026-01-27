@@ -233,6 +233,13 @@ async function uploadCertificate() {
   }
 
   try {
+    // Check Firebase initialization
+    if (!storage || !db) {
+      alert('❌ Firebase not initialized. Contact administrator to configure Firebase credentials.');
+      console.error('Firebase Storage or Firestore not initialized');
+      return;
+    }
+
     const fileUrl = await uploadFile(file, 'certificates');
     
     await saveCertificate({
@@ -247,6 +254,7 @@ async function uploadCertificate() {
     loadCertificates();
     alert('✓ Certificate uploaded successfully');
   } catch (error) {
+    console.error('Certificate upload error:', error);
     alert('❌ Upload failed: ' + error.message);
   }
 }
@@ -311,6 +319,13 @@ async function uploadCV() {
   }
 
   try {
+    // Check Firebase initialization
+    if (!storage || !db) {
+      alert('❌ Firebase not initialized. Contact administrator to configure Firebase credentials.');
+      console.error('Firebase Storage or Firestore not initialized');
+      return;
+    }
+
     const fileUrl = await uploadFile(file, 'cv');
 
     // Save or update CV reference
@@ -324,6 +339,7 @@ async function uploadCV() {
     loadCV();
     alert('✓ CV uploaded successfully');
   } catch (error) {
+    console.error('CV upload error:', error);
     alert('❌ Upload failed: ' + error.message);
   }
 }

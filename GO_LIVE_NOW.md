@@ -51,9 +51,9 @@ git push -u origin main
 5. Click Save
 
 ### 🎉 Your Portfolio is LIVE!
-**URL:** `https://YOUR_USERNAME.github.io/portfolio`
+**URL:** `https://walidsaifullah506.github.io/sadi`
 
-**Example:** `https://walidsaifullah.github.io/portfolio`
+**Example:** `https://walidsaifullah.github.io/sadi`
 
 ---
 
